@@ -1,6 +1,6 @@
 plugins {
-    kotlin("android")
     id("com.android.application")
+    kotlin("android")
 }
 
 android {
@@ -18,6 +18,9 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles("proguard-rules.pro")
+            signingConfig = signingConfigs["debug"]
         }
     }
 
@@ -33,10 +36,16 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
+    packagingOptions {
+        resources {
+            merges += "META-INF/xposed/*"
+            excludes += "**"
+        }
+    }
 }
 
 dependencies {
     compileOnly("io.github.libxposed:api:100")
     implementation("io.github.libxposed:service:100-1.0.0")
-    implementation("com.google.android.material:material:1.8.0")
 }

@@ -1,17 +1,17 @@
 package io.github.libxposed.example
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import io.github.libxposed.example.databinding.ActivityMainBinding
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedService.OnScopeEventListener
 import io.github.libxposed.service.XposedServiceHelper
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : Activity() {
 
     private var mService: XposedService? = null
 

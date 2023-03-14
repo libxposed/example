@@ -3,8 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
+        android:description="@android:string/unknownName"
         android:label="Xposed Example"
-        android:theme="@style/Theme.AppCompat.DayNight"
+        android:theme="@android:style/Theme.DeviceDefault"
         tools:ignore="MissingApplicationIcon">
         <activity
             android:name=".MainActivity"
