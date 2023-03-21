@@ -43,9 +43,14 @@ android {
             excludes += "**"
         }
     }
+
+    lint {
+        abortOnError = true
+        checkReleaseBuilds = false
+    }
 }
 
 dependencies {
-    compileOnly("io.github.libxposed:api:100")
-    implementation("io.github.libxposed:service:100-1.0.0")
+    compileOnly(libs.libxposed.api)
+    implementation(libs.libxposed.service)
 }
