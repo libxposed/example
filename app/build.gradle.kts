@@ -1,16 +1,16 @@
 plugins {
-    id("com.android.application")
-    kotlin("android")
+    alias(libs.plugins.agp.app)
+    alias(libs.plugins.kotlin)
 }
 
 android {
     namespace = "io.github.libxposed.example"
-    compileSdk = 33
-    buildToolsVersion = "33.0.2"
+    compileSdk = 34
+    buildToolsVersion = "34.0.0"
 
     defaultConfig {
         minSdk = 24
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
     }
@@ -28,16 +28,16 @@ android {
         viewBinding = true
     }
 
-    kotlinOptions {
-        jvmTarget = "11"
+    kotlin {
+        jvmToolchain(17)
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
-    packagingOptions {
+    packaging {
         resources {
             merges += "META-INF/xposed/*"
             excludes += "**"
