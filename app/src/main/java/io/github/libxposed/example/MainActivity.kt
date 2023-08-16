@@ -10,6 +10,7 @@ import io.github.libxposed.example.databinding.ActivityMainBinding
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedService.OnScopeEventListener
 import io.github.libxposed.service.XposedServiceHelper
+import kotlin.random.Random
 
 class MainActivity : Activity() {
 
@@ -64,7 +65,13 @@ class MainActivity : Activity() {
                 binding.frameworkVersionCode.text = "Framework version code " + service.frameworkVersionCode
                 binding.scope.text = "Scope: " + service.scope
 
-                service.requestScope("com.android.settings", mCallback)
+                binding.requestScope.setOnClickListener {
+                    service.requestScope("com.android.settings", mCallback)
+                }
+                binding.randomPrefs.setOnClickListener {
+                    val prefs = service.getRemotePreferences("test")
+                    prefs.edit().putInt("test", Random.nextInt()).apply()
+                }
             }
 
             override fun onServiceDied(service: XposedService) {

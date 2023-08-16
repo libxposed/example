@@ -53,4 +53,18 @@
         android:layout_gravity="center"
         android:textAppearance="?android:textAppearanceLarge"
         tools:text="Scope" />
+
+    <Button
+        android:id="@+id/request_scope"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Request Scope"
+        tools:ignore="HardcodedText" />
+
+    <Button
+        android:id="@+id/random_prefs"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Random Prefs"
+        tools:ignore="HardcodedText" />
 </LinearLayout>

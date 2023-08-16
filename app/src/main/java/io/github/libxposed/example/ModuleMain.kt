@@ -54,6 +54,12 @@ class ModuleMain(base: XposedInterface, param: ModuleLoadedParam) : XposedModule
 
         if (!param.isFirstPackage) return
 
+        val prefs = getRemotePreferences("test")
+        prefs.registerOnSharedPreferenceChangeListener { _, key ->
+            val value = prefs.getInt(key, 0)
+            log("onSharedPreferenceChanged: $key->$value")
+        }
+
         val exampleMethod = Application::class.java.getDeclaredMethod("attach", Context::class.java)
         hook(exampleMethod, MyHooker::class.java)
     }
