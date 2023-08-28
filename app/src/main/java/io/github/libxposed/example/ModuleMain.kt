@@ -12,6 +12,8 @@ import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.annotations.AfterInvocation
 import io.github.libxposed.api.annotations.BeforeInvocation
 import io.github.libxposed.api.annotations.XposedHooker
+import java.io.FileNotFoundException
+import java.io.FileReader
 import kotlin.random.Random
 
 private lateinit var module: ModuleMain
@@ -55,9 +57,19 @@ class ModuleMain(base: XposedInterface, param: ModuleLoadedParam) : XposedModule
         if (!param.isFirstPackage) return
 
         val prefs = getRemotePreferences("test")
+        log("remote prefs: " + prefs.getInt("test", -1))
         prefs.registerOnSharedPreferenceChangeListener { _, key ->
             val value = prefs.getInt(key, 0)
             log("onSharedPreferenceChanged: $key->$value")
+        }
+
+        try {
+            val text = openRemoteFile("test.txt").use {
+                FileReader(it.fileDescriptor).readText()
+            }
+            log("remote file content: $text")
+        } catch (e: FileNotFoundException) {
+            log("remote file not found")
         }
 
         val exampleMethod = Application::class.java.getDeclaredMethod("attach", Context::class.java)

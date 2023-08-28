@@ -67,4 +67,11 @@
         android:layout_height="wrap_content"
         android:text="Random Prefs"
         tools:ignore="HardcodedText" />
+
+    <Button
+        android:id="@+id/remote_file"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Remote File"
+        tools:ignore="HardcodedText" />
 </LinearLayout>

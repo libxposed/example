@@ -10,6 +10,7 @@ import io.github.libxposed.example.databinding.ActivityMainBinding
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedService.OnScopeEventListener
 import io.github.libxposed.service.XposedServiceHelper
+import java.io.FileWriter
 import kotlin.random.Random
 
 class MainActivity : Activity() {
@@ -70,7 +71,17 @@ class MainActivity : Activity() {
                 }
                 binding.randomPrefs.setOnClickListener {
                     val prefs = service.getRemotePreferences("test")
-                    prefs.edit().putInt("test", Random.nextInt()).apply()
+                    val old = prefs.getInt("test", -1)
+                    val new = Random.nextInt()
+                    Toast.makeText(this@MainActivity, "$old -> $new", Toast.LENGTH_SHORT).show()
+                    prefs.edit().putInt("test", new).apply()
+                }
+                binding.remoteFile.setOnClickListener {
+                    service.openRemoteFile("test.txt").use { pfd ->
+                        FileWriter(pfd.fileDescriptor).use {
+                            it.append("Hello World!")
+                        }
+                    }
                 }
             }
 
