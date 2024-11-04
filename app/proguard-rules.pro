@@ -6,10 +6,6 @@
     public void onPackageLoaded(...);
     public void onSystemServerLoaded(...);
 }
--keep,allowoptimization,allowobfuscation @io.github.libxposed.api.annotations.* class * {
-    @io.github.libxposed.api.annotations.BeforeInvocation <methods>;
-    @io.github.libxposed.api.annotations.AfterInvocation <methods>;
-}
 
 # Kotlin
 -assumenosideeffects class kotlin.jvm.internal.Intrinsics {

@@ -9,9 +9,6 @@ import io.github.libxposed.api.XposedInterface.BeforeHookCallback
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
-import io.github.libxposed.api.annotations.AfterInvocation
-import io.github.libxposed.api.annotations.BeforeInvocation
-import io.github.libxposed.api.annotations.XposedHooker
 import java.io.FileNotFoundException
 import java.io.FileReader
 import kotlin.random.Random
@@ -25,12 +22,10 @@ class ModuleMain(base: XposedInterface, param: ModuleLoadedParam) : XposedModule
         module = this
     }
 
-    @XposedHooker
     class MyHooker(private val magic: Int) : XposedInterface.Hooker {
         companion object {
             @JvmStatic
-            @BeforeInvocation
-            fun beforeInvocation(callback: BeforeHookCallback): MyHooker {
+            fun before(callback: BeforeHookCallback): MyHooker {
                 val key = Random.nextInt()
                 val appContext = callback.args[0]
                 module.log("beforeInvocation: key = $key")
@@ -39,8 +34,7 @@ class ModuleMain(base: XposedInterface, param: ModuleLoadedParam) : XposedModule
             }
 
             @JvmStatic
-            @AfterInvocation
-            fun afterInvocation(callback: AfterHookCallback, context: MyHooker) {
+            fun after(callback: AfterHookCallback, context: MyHooker) {
                 module.log("afterInvocation: key = ${context.magic}")
             }
         }
