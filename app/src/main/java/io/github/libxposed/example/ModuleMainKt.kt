@@ -1,18 +1,13 @@
 package io.github.libxposed.example
 
-import android.annotation.SuppressLint
-import android.app.Application
-import android.content.Context
 import android.util.Log
-import io.github.libxposed.api.XposedInterface
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import java.io.FileNotFoundException
 import java.io.FileReader
-import java.lang.reflect.Method
 
-class ModuleMain : XposedModule() {
+class ModuleMainKt : XposedModule() {
     companion object {
         const val TAG = "XposedExample"
     }
@@ -51,13 +46,37 @@ class ModuleMain : XposedModule() {
             log(Log.INFO, TAG, "remote file not found")
         }
 
-        @SuppressLint("DiscouragedPrivateApi")
-        val exampleMethod = Application::class.java.getDeclaredMethod("attach", Context::class.java)
+        val exampleClass = Class.forName("io.github.libxposed.example.Example", true, param.classLoader)
+        val exampleMethod = exampleClass.getDeclaredMethod("method")
+        val exampleConstructor = exampleClass.getDeclaredConstructor()
 
-        hook(exampleMethod, object : XposedInterface.SimpleHooker<Method> {
-            override fun before(callback: XposedInterface.BeforeHookCallback<Method>) {
-                log(Log.INFO, TAG, "before Application.attach")
-            }
-        })
+        hook(exampleMethod) { chain ->
+            log(Log.INFO, TAG, "call the following chains with the same args")
+            var result = chain.proceed() as String
+
+            log(Log.INFO, TAG, "call the following chains with different args")
+            val newArgs = chain.args.clone()
+            result += chain.proceed(*newArgs) as String
+            result += chain.proceed(newArgs[0], newArgs[1], newArgs[2]) as String
+
+            log(Log.INFO, TAG, "call the following chains with different this object")
+            val newThis = Any()
+            result += chain.proceedWith(newThis, *chain.args) as String
+
+            log(Log.INFO, TAG, "call the raw method")
+            result += getInvoker(chain.executable, null).invoke(chain.thisObject) as String
+
+            log(Log.INFO, TAG, "returned value will pass to higher priority chains")
+            result
+        }
+
+        hook(exampleConstructor, PRIORITY_HIGHEST) { chain ->
+            chain.proceed()
+        }
+
+        getInvoker(exampleMethod, null).invoke(Any())
+        getInvoker(exampleMethod, PRIORITY_DEFAULT).invokeSpecial(Any())
+        getInvoker(exampleConstructor, null).newInstance()
+        getInvoker(exampleConstructor, PRIORITY_DEFAULT).newInstanceSpecial(exampleClass)
     }
 }
