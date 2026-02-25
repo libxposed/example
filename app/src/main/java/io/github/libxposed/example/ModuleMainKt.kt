@@ -1,6 +1,7 @@
 package io.github.libxposed.example
 
 import android.util.Log
+import io.github.libxposed.api.XposedInterface.Invoker
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
@@ -71,20 +72,26 @@ class ModuleMainKt : XposedModule() {
             result += chain.proceedWith(newThis, *newArgs) as String
 
             log(Log.INFO, TAG, "call the raw method")
-            result += getInvoker(chain.executable, null).invoke(chain.thisObject) as String
+            result += getInvoker(chain.executable, Invoker.Type.ORIGIN).invoke(chain.thisObject) as String
 
             log(Log.INFO, TAG, "returned value will pass to higher priority chains")
             result
         }
 
-        hook(exampleConstructor, PRIORITY_HIGHEST) { chain ->
+        hook(exampleConstructor, PRIORITY_HIGHEST) { _ ->
             log(Log.INFO, TAG, "thrown exception will be propagated to upper interceptors or the caller")
             throw RuntimeException("constructor hook exception")
         }
 
-        getInvoker(exampleMethod, null).invoke(Any())
-        getInvoker(exampleMethod, PRIORITY_DEFAULT).invokeSpecial(Any())
-        getInvoker(exampleConstructor, null).newInstance()
-        getInvoker(exampleConstructor, PRIORITY_DEFAULT).newInstanceSpecial(exampleClass)
+        // call the original method
+        getInvoker(exampleMethod, Invoker.Type.ORIGIN).invoke(Any())
+        // call the special method starting from the middle of the hook chain
+        getInvoker(exampleMethod, Invoker.Type.Chain(-50)).invokeSpecial(Any())
+        // create a new instance using the original constructor
+        getInvoker(exampleConstructor, Invoker.Type.ORIGIN).newInstance()
+        // create a new special instance with full hook chain
+        getInvoker(exampleConstructor, Invoker.Type.Chain.FULL).newInstanceSpecial(exampleClass)
+        // identical to the above line, default to call with full hook chain
+        getInvoker(exampleConstructor).newInstanceSpecial(exampleClass)
     }
 }
