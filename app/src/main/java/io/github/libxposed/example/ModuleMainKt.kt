@@ -55,13 +55,20 @@ class ModuleMainKt : XposedModule() {
             var result = chain.proceed() as String
 
             log(Log.INFO, TAG, "call the following chains with different args")
-            val newArgs = chain.args.clone()
+            // you can pass the args one by one
+            val old0 = chain.getArg<String>(0)
+            val new1 = Any()
+            result += chain.proceed(old0, new1) as String
+            // or use an array to pass all the args
+            val newArgs = chain.args.toTypedArray()
+            newArgs[1] = new1
             result += chain.proceed(*newArgs) as String
-            result += chain.proceed(newArgs[0], newArgs[1], newArgs[2]) as String
 
             log(Log.INFO, TAG, "call the following chains with different this object")
             val newThis = Any()
-            result += chain.proceedWith(newThis, *chain.args) as String
+            result += chain.proceedWith(newThis) as String
+            result += chain.proceedWith(newThis, old0, new1) as String
+            result += chain.proceedWith(newThis, *newArgs) as String
 
             log(Log.INFO, TAG, "call the raw method")
             result += getInvoker(chain.executable, null).invoke(chain.thisObject) as String
@@ -71,7 +78,8 @@ class ModuleMainKt : XposedModule() {
         }
 
         hook(exampleConstructor, PRIORITY_HIGHEST) { chain ->
-            chain.proceed()
+            log(Log.INFO, TAG, "thrown exception will be propagated to upper interceptors or the caller")
+            throw RuntimeException("constructor hook exception")
         }
 
         getInvoker(exampleMethod, null).invoke(Any())

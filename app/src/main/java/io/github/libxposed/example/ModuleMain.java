@@ -21,13 +21,20 @@ public class ModuleMain extends XposedModule {
                 var result = (String) chain.proceed();
 
                 log(Log.INFO, TAG, "call the following chains with different args");
-                var newArgs = chain.getArgs().clone();
+                // you can pass the args one by one
+                String old0 = chain.getArg(0);
+                Object new1 = new Object();
+                result += (String) chain.proceed(old0, new1);
+                // or use an array to pass all the args
+                var newArgs = chain.getArgs().toArray();
+                newArgs[1] = new1;
                 result += (String) chain.proceed(newArgs);
-                result += (String) chain.proceed(newArgs[0], newArgs[1], newArgs[2]);
 
                 log(Log.INFO, TAG, "call the following chains with different this object");
                 var newThis = new Object();
-                result += (String) chain.proceedWith(newThis, chain.getArgs());
+                result += (String) chain.proceedWith(newThis);
+                result += (String) chain.proceedWith(newThis, old0, new1);
+                result += (String) chain.proceedWith(newThis, newArgs);
 
                 log(Log.INFO, TAG, "call the raw method");
                 result += (String) getInvoker(chain.getExecutable(), null).invoke(chain.getThisObject());
@@ -36,8 +43,8 @@ public class ModuleMain extends XposedModule {
             });
 
             hook(exampleConstructor, PRIORITY_HIGHEST, (chain) -> {
-                log(Log.INFO, TAG, "constructor hook");
-                chain.proceed();
+                log(Log.INFO, TAG, "thrown exception will be propagated to upper interceptors or the caller");
+                throw new RuntimeException("constructor hook exception");
             });
 
             getInvoker(exampleMethod, null).invoke(new Object());
