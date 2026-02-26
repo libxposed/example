@@ -43,7 +43,7 @@ class ModuleMainKt : XposedModule() {
                 FileReader(it.fileDescriptor).readText()
             }
             log(Log.INFO, TAG, "remote file content: $text")
-        } catch (e: FileNotFoundException) {
+        } catch (_: FileNotFoundException) {
             log(Log.INFO, TAG, "remote file not found")
         }
 
@@ -72,7 +72,7 @@ class ModuleMainKt : XposedModule() {
             result += chain.proceedWith(newThis, *newArgs) as String
 
             log(Log.INFO, TAG, "call the raw method")
-            result += getInvoker(chain.executable, Invoker.Type.ORIGIN).invoke(chain.thisObject) as String
+            result += getInvoker(chain.executable).setType(Invoker.Type.ORIGIN).invoke(chain.thisObject) as String
 
             log(Log.INFO, TAG, "returned value will pass to higher priority chains")
             result
@@ -90,13 +90,13 @@ class ModuleMainKt : XposedModule() {
         }
 
         // call the original method
-        getInvoker(exampleMethod, Invoker.Type.ORIGIN).invoke(Any())
+        getInvoker(exampleMethod).setType(Invoker.Type.ORIGIN).invoke(Any())
         // call the special method starting from the middle of the hook chain
-        getInvoker(exampleMethod, Invoker.Type.Chain(-50)).invokeSpecial(Any())
+        getInvoker(exampleMethod).setType(Invoker.Type.Chain(-50)).invokeSpecial(Any())
         // create a new instance using the original constructor
-        getInvoker(exampleConstructor, Invoker.Type.ORIGIN).newInstance()
+        getInvoker(exampleConstructor).setType(Invoker.Type.ORIGIN).newInstance()
         // create a new special instance with full hook chain
-        getInvoker(exampleConstructor, Invoker.Type.Chain.FULL).newInstanceSpecial(exampleClass)
+        getInvoker(exampleConstructor).setType(Invoker.Type.Chain.FULL).newInstanceSpecial(exampleClass)
         // identical to the above line, default to call with full hook chain
         getInvoker(exampleConstructor).newInstanceSpecial(exampleClass)
     }

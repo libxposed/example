@@ -37,7 +37,7 @@ public class ModuleMain extends XposedModule {
                 result += (String) chain.proceedWith(newThis, newArgs);
 
                 log(Log.INFO, TAG, "call the raw method");
-                result += (String) getInvoker(chain.getExecutable(), Invoker.Type.ORIGIN).invoke(chain.getThisObject());
+                result += (String) getInvoker(chain.getExecutable()).setType(Invoker.Type.ORIGIN).invoke(chain.getThisObject());
 
                 return result;
             });
@@ -56,13 +56,13 @@ public class ModuleMain extends XposedModule {
                     });
 
             // call the original method
-            getInvoker(exampleMethod, Invoker.Type.ORIGIN).invoke(new Object());
+            getInvoker(exampleMethod).setType(Invoker.Type.ORIGIN).invoke(new Object());
             // call the special method starting from the middle of the hook chain
-            getInvoker(exampleMethod, new Invoker.Type.Chain(-50)).invokeSpecial(new Object());
+            getInvoker(exampleMethod).setType(new Invoker.Type.Chain(-50)).invokeSpecial(new Object());
             // create a new instance using the original constructor
-            getInvoker(exampleConstructor, Invoker.Type.ORIGIN).newInstance();
+            getInvoker(exampleConstructor).setType(Invoker.Type.ORIGIN).newInstance();
             // create a new special instance with full hook chain
-            getInvoker(exampleConstructor, Invoker.Type.Chain.FULL).newInstanceSpecial(exampleClass);
+            getInvoker(exampleConstructor).setType(Invoker.Type.Chain.FULL).newInstanceSpecial(exampleClass);
             // identical to the above line, default to call with full hook chain
             getInvoker(exampleConstructor).newInstanceSpecial(exampleClass);
         } catch (Throwable t) {
