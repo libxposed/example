@@ -16,7 +16,7 @@ public class ModuleMain extends XposedModule {
             var exampleMethod = exampleClass.getDeclaredMethod("method");
             var exampleConstructor = exampleClass.getDeclaredConstructor();
 
-            hook(exampleMethod, (chain) -> {
+            hook(exampleMethod).intercept(chain -> {
                 log(Log.INFO, TAG, "call the following chains with the same args");
                 var result = (String) chain.proceed();
 
@@ -42,10 +42,18 @@ public class ModuleMain extends XposedModule {
                 return result;
             });
 
-            hook(exampleConstructor, PRIORITY_HIGHEST, (chain) -> {
-                log(Log.INFO, TAG, "thrown exception will be propagated to upper interceptors or the caller");
-                throw new RuntimeException("constructor hook exception");
+            hook(exampleMethod).intercept(chain -> {
+                chain.proceed();
+                // for void methods, it's identical to return anything or no return statement
+                // return null;
             });
+
+            hook(exampleConstructor)
+                    .setPriority(PRIORITY_HIGHEST)
+                    .intercept(chain -> {
+                        log(Log.INFO, TAG, "thrown exception will be propagated to upper interceptors or the caller");
+                        throw new RuntimeException("constructor hook exception");
+                    });
 
             // call the original method
             getInvoker(exampleMethod, Invoker.Type.ORIGIN).invoke(new Object());

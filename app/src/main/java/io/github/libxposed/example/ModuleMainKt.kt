@@ -51,7 +51,7 @@ class ModuleMainKt : XposedModule() {
         val exampleMethod = exampleClass.getDeclaredMethod("method")
         val exampleConstructor = exampleClass.getDeclaredConstructor()
 
-        hook(exampleMethod) { chain ->
+        hook(exampleMethod).intercept { chain ->
             log(Log.INFO, TAG, "call the following chains with the same args")
             var result = chain.proceed() as String
 
@@ -78,7 +78,13 @@ class ModuleMainKt : XposedModule() {
             result
         }
 
-        hook(exampleConstructor, PRIORITY_HIGHEST) { _ ->
+        hook(exampleMethod).intercept { chain ->
+            chain.proceed()
+            // for void methods, it's identical to return anything or no return statement
+            // return@intercept null
+        }
+
+        hook(exampleConstructor).setPriority(PRIORITY_HIGHEST).intercept { _ ->
             log(Log.INFO, TAG, "thrown exception will be propagated to upper interceptors or the caller")
             throw RuntimeException("constructor hook exception")
         }
