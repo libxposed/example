@@ -1,10 +1,14 @@
 package io.github.libxposed.example
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import io.github.libxposed.api.XposedInterface.Invoker
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
+import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam
+import io.github.libxposed.api.XposedModuleInterface.SystemServerStartingParam
 import java.io.FileNotFoundException
 import java.io.FileReader
 
@@ -23,9 +27,18 @@ class ModuleMainKt : XposedModule() {
         log(Log.INFO, TAG, "dynamic code api call supported: " + hasCap(CAP_RT_DYNAMIC_CODE_API_ACCESS))
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onPackageLoaded(param: PackageLoadedParam) {
         log(Log.INFO, TAG, "onPackageLoaded: " + param.packageName)
-        log(Log.INFO, TAG, "param classloader is " + param.classLoader)
+        log(Log.INFO, TAG, "default classloader is " + param.defaultClassLoader)
+    }
+
+    override fun onPackageReady(param: PackageReadyParam) {
+        log(Log.INFO, TAG, "onPackageReady: " + param.packageName)
+        log(Log.INFO, TAG, "app classloader is " + param.classLoader)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            log(Log.INFO, TAG, "app acf is " + param.appComponentFactory)
+        }
         log(Log.INFO, TAG, "module apk path: " + this.applicationInfo.sourceDir)
         log(Log.INFO, TAG, "----------")
 
@@ -99,5 +112,9 @@ class ModuleMainKt : XposedModule() {
         getInvoker(exampleConstructor).setType(Invoker.Type.Chain.FULL).newInstanceSpecial(exampleClass)
         // identical to the above line, default to call with full hook chain
         getInvoker(exampleConstructor).newInstanceSpecial(exampleClass)
+    }
+
+    override fun onSystemServerStarting(param: SystemServerStartingParam) {
+       log(Log.INFO, TAG, "onSystemServerStarting, system classloader: " + param.classLoader)
     }
 }

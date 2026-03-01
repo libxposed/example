@@ -1,16 +1,40 @@
 package io.github.libxposed.example;
 
+import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+
+import java.util.Locale;
 
 import io.github.libxposed.api.XposedModule;
 
 public class ModuleMain extends XposedModule {
     static final String TAG = "ModuleMain";
 
+    private boolean hasCap(long cap) {
+        return (getFrameworkCapabilities() & cap) != 0;
+    }
+
     @Override
+    public void onModuleLoaded(@NonNull ModuleLoadedParam param) {
+        log(Log.INFO, TAG, "onModuleLoaded: " + param.getProcessName());
+        log(Log.INFO, TAG, String.format(Locale.getDefault(), "framework: %s (%s) API %d", getFrameworkName(), getFrameworkVersionCode(), getApiVersion()));
+        log(Log.INFO, TAG, "system supported: " + hasCap(CAP_SYSTEM));
+        log(Log.INFO, TAG, "remote supported: " + hasCap(CAP_REMOTE));
+        log(Log.INFO, TAG, "dynamic code api call supported: " + hasCap(CAP_RT_DYNAMIC_CODE_API_ACCESS));
+    }
+
+    @Override
+    @RequiresApi(Build.VERSION_CODES.Q)
     public void onPackageLoaded(@NonNull PackageLoadedParam param) {
+        log(Log.INFO, TAG, "onPackageLoaded: " + param.getPackageName());
+        log(Log.INFO, TAG, "default classloader is " + param.getDefaultClassLoader());
+    }
+
+    @Override
+    public void onPackageReady(@NonNull PackageReadyParam param) {
         try {
             var exampleClass = Class.forName("io.github.libxposed.example.Example", true, param.getClassLoader());
             var exampleMethod = exampleClass.getDeclaredMethod("method");
@@ -48,12 +72,10 @@ public class ModuleMain extends XposedModule {
                 // return null;
             });
 
-            hook(exampleConstructor)
-                    .setPriority(PRIORITY_HIGHEST)
-                    .intercept(chain -> {
-                        log(Log.INFO, TAG, "thrown exception will be propagated to upper interceptors or the caller");
-                        throw new RuntimeException("constructor hook exception");
-                    });
+            hook(exampleConstructor).setPriority(PRIORITY_HIGHEST).intercept(chain -> {
+                log(Log.INFO, TAG, "thrown exception will be propagated to upper interceptors or the caller");
+                throw new RuntimeException("constructor hook exception");
+            });
 
             // call the original method
             getInvoker(exampleMethod).setType(Invoker.Type.ORIGIN).invoke(new Object());
