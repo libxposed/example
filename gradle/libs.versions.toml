@@ -1,7 +1,7 @@
 [versions]
 agp = "9.0.1"
-xposed-api = "100"
-xposed-service = "100-1.0.0"
+xposed-api = "101.0.0"
+xposed-service = "101.0.0"
 
 [plugins]
 agp-app = { id = "com.android.application", version.ref = "agp" }

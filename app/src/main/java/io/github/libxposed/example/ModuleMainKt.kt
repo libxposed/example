@@ -21,10 +21,10 @@ class ModuleMainKt : XposedModule() {
         log(Log.INFO, TAG, "onModuleLoaded: " + param.processName)
         log(Log.INFO, TAG, "framework: $frameworkName($frameworkVersionCode) API $apiVersion")
 
-        val hasCap: (Long) -> Boolean = { cap -> frameworkCapabilities.and(cap) != 0L }
-        log(Log.INFO, TAG, "system supported: " + hasCap(CAP_SYSTEM))
-        log(Log.INFO, TAG, "remote supported: " + hasCap(CAP_REMOTE))
-        log(Log.INFO, TAG, "dynamic code api call supported: " + hasCap(CAP_RT_DYNAMIC_CODE_API_ACCESS))
+        val hasProp: (Long) -> Boolean = { prop -> frameworkProperties.and(prop) != 0L }
+        log(Log.INFO, TAG, "system supported: " + hasProp(PROP_CAP_SYSTEM))
+        log(Log.INFO, TAG, "remote supported: " + hasProp(PROP_CAP_REMOTE))
+        log(Log.INFO, TAG, "api protection: " + hasProp(PROP_RT_API_PROTECTION))
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -39,7 +39,7 @@ class ModuleMainKt : XposedModule() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             log(Log.INFO, TAG, "app acf is " + param.appComponentFactory)
         }
-        log(Log.INFO, TAG, "module apk path: " + this.applicationInfo.sourceDir)
+        log(Log.INFO, TAG, "module apk path: " + this.moduleApplicationInfo.sourceDir)
         log(Log.INFO, TAG, "----------")
 
         if (!param.isFirstPackage) return
@@ -69,23 +69,18 @@ class ModuleMainKt : XposedModule() {
             var result = chain.proceed() as String
 
             log(Log.INFO, TAG, "call the following chains with different args")
-            // you can pass the args one by one
-            val old0 = chain.getArg<String>(0)
+            val old0 = chain.args[0] as String
             val new1 = Any()
-            result += chain.proceed(old0, new1) as String
-            // or use an array to pass all the args
-            val newArgs = chain.args.toTypedArray()
-            newArgs[1] = new1
-            result += chain.proceed(*newArgs) as String
+            val newArgs = arrayOf(old0, new1);
+            result += chain.proceed(newArgs) as String
 
             log(Log.INFO, TAG, "call the following chains with different this object")
             val newThis = Any()
             result += chain.proceedWith(newThis) as String
-            result += chain.proceedWith(newThis, old0, new1) as String
-            result += chain.proceedWith(newThis, *newArgs) as String
+            result += chain.proceedWith(newThis, newArgs) as String
 
             log(Log.INFO, TAG, "call the raw method")
-            result += getInvoker(chain.executable).setType(Invoker.Type.ORIGIN).invoke(chain.thisObject) as String
+            result += getInvoker(exampleMethod).setType(Invoker.Type.ORIGIN).invoke(chain.getThisObject()) as String
 
             log(Log.INFO, TAG, "returned value will pass to higher priority chains")
             result

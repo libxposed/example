@@ -47,6 +47,14 @@
         tools:text="Framework version code" />
 
     <TextView
+        android:id="@+id/framework_properties"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textAppearance="?android:textAppearanceLarge"
+        tools:text="Framework properties" />
+
+    <TextView
         android:id="@+id/scope"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

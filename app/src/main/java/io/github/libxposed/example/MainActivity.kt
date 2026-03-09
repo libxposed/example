@@ -18,33 +18,15 @@ class MainActivity : Activity() {
     private var mService: XposedService? = null
 
     private val mCallback = object : OnScopeEventListener {
-        override fun onScopeRequestPrompted(packageName: String) {
+        override fun onScopeRequestApproved(approved: List<String>) {
             runOnUiThread {
-                Toast.makeText(this@MainActivity, "onScopeRequestPrompted: $packageName", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "onScopeRequestApproved: $approved", Toast.LENGTH_SHORT).show()
             }
         }
 
-        override fun onScopeRequestApproved(packageName: String) {
+        override fun onScopeRequestFailed(message: String) {
             runOnUiThread {
-                Toast.makeText(this@MainActivity, "onScopeRequestApproved: $packageName", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        override fun onScopeRequestDenied(packageName: String) {
-            runOnUiThread {
-                Toast.makeText(this@MainActivity, "onScopeRequestDenied: $packageName", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        override fun onScopeRequestTimeout(packageName: String) {
-            runOnUiThread {
-                Toast.makeText(this@MainActivity, "onScopeRequestTimeout: $packageName", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        override fun onScopeRequestFailed(packageName: String, message: String) {
-            runOnUiThread {
-                Toast.makeText(this@MainActivity, "onScopeRequestFailed: $packageName, $message", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@MainActivity, "onScopeRequestFailed: $message", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -64,10 +46,11 @@ class MainActivity : Activity() {
                 binding.framework.text = "Framework " + service.frameworkName
                 binding.frameworkVersion.text = "Framework version " + service.frameworkVersion
                 binding.frameworkVersionCode.text = "Framework version code " + service.frameworkVersionCode
+                binding.frameworkProperties.text = "Framework properties: " + service.frameworkProperties.toHexString()
                 binding.scope.text = "Scope: " + service.scope
 
                 binding.requestScope.setOnClickListener {
-                    service.requestScope("com.android.settings", mCallback)
+                    service.requestScope(listOf("com.android.settings"), mCallback)
                 }
                 binding.randomPrefs.setOnClickListener {
                     val prefs = service.getRemotePreferences("test")

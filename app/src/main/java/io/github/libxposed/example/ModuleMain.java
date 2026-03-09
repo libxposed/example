@@ -13,17 +13,17 @@ import io.github.libxposed.api.XposedModule;
 public class ModuleMain extends XposedModule {
     static final String TAG = "ModuleMain";
 
-    private boolean hasCap(long cap) {
-        return (getFrameworkCapabilities() & cap) != 0;
+    private boolean hasProp(long prop) {
+        return (getFrameworkProperties() & prop) != 0;
     }
 
     @Override
     public void onModuleLoaded(@NonNull ModuleLoadedParam param) {
         log(Log.INFO, TAG, "onModuleLoaded: " + param.getProcessName());
         log(Log.INFO, TAG, String.format(Locale.getDefault(), "framework: %s (%s) API %d", getFrameworkName(), getFrameworkVersionCode(), getApiVersion()));
-        log(Log.INFO, TAG, "system supported: " + hasCap(CAP_SYSTEM));
-        log(Log.INFO, TAG, "remote supported: " + hasCap(CAP_REMOTE));
-        log(Log.INFO, TAG, "dynamic code api call supported: " + hasCap(CAP_RT_DYNAMIC_CODE_API_ACCESS));
+        log(Log.INFO, TAG, "system supported: " + hasProp(PROP_CAP_SYSTEM));
+        log(Log.INFO, TAG, "remote supported: " + hasProp(PROP_CAP_REMOTE));
+        log(Log.INFO, TAG, "api protection: " + hasProp(PROP_RT_API_PROTECTION));
     }
 
     @Override
@@ -45,31 +45,26 @@ public class ModuleMain extends XposedModule {
                 var result = (String) chain.proceed();
 
                 log(Log.INFO, TAG, "call the following chains with different args");
-                // you can pass the args one by one
-                String old0 = chain.getArg(0);
+                String old0 = (String) chain.getArg(0);
                 Object new1 = new Object();
-                result += (String) chain.proceed(old0, new1);
-                // or use an array to pass all the args
-                var newArgs = chain.getArgs().toArray();
-                newArgs[1] = new1;
+                var newArgs = new Object[] { old0, new1 };
                 result += (String) chain.proceed(newArgs);
 
                 log(Log.INFO, TAG, "call the following chains with different this object");
                 var newThis = new Object();
                 result += (String) chain.proceedWith(newThis);
-                result += (String) chain.proceedWith(newThis, old0, new1);
                 result += (String) chain.proceedWith(newThis, newArgs);
 
                 log(Log.INFO, TAG, "call the raw method");
-                result += (String) getInvoker(chain.getExecutable()).setType(Invoker.Type.ORIGIN).invoke(chain.getThisObject());
+                result += (String) getInvoker(exampleMethod).setType(Invoker.Type.ORIGIN).invoke(chain.getThisObject());
 
                 return result;
             });
 
             hook(exampleMethod).intercept(chain -> {
                 chain.proceed();
-                // for void methods, it's identical to return anything or no return statement
-                // return null;
+                // for void methods, it's needed to return null because Java doesn't support unit type
+                return null;
             });
 
             hook(exampleConstructor).setPriority(PRIORITY_HIGHEST).intercept(chain -> {
