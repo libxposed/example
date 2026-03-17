@@ -3,6 +3,7 @@ package io.github.libxposed.example
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import io.github.libxposed.api.XposedInterface.ExceptionMode
 import io.github.libxposed.api.XposedInterface.Invoker
 import io.github.libxposed.api.XposedModule
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
@@ -92,10 +93,13 @@ class ModuleMainKt : XposedModule() {
             // return@intercept null
         }
 
-        hook(exampleConstructor).setPriority(PRIORITY_HIGHEST).intercept { _ ->
-            log(Log.INFO, TAG, "thrown exception will be propagated to upper interceptors or the caller")
-            throw RuntimeException("constructor hook exception")
-        }
+        hook(exampleConstructor)
+            .setPriority(PRIORITY_HIGHEST)
+            .setExceptionMode(ExceptionMode.PASSTHROUGH)
+            .intercept { _ ->
+                log(Log.INFO, TAG, "thrown exception will be propagated to upper interceptors or the caller")
+                throw RuntimeException("constructor hook exception")
+            }
 
         // call the original method
         getInvoker(exampleMethod).setType(Invoker.Type.ORIGIN).invoke(Any())
@@ -110,6 +114,6 @@ class ModuleMainKt : XposedModule() {
     }
 
     override fun onSystemServerStarting(param: SystemServerStartingParam) {
-       log(Log.INFO, TAG, "onSystemServerStarting, system classloader: " + param.classLoader)
+        log(Log.INFO, TAG, "onSystemServerStarting, system classloader: " + param.classLoader)
     }
 }

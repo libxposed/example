@@ -47,7 +47,7 @@ public class ModuleMain extends XposedModule {
                 log(Log.INFO, TAG, "call the following chains with different args");
                 String old0 = (String) chain.getArg(0);
                 Object new1 = new Object();
-                var newArgs = new Object[] { old0, new1 };
+                var newArgs = new Object[]{old0, new1};
                 result += (String) chain.proceed(newArgs);
 
                 log(Log.INFO, TAG, "call the following chains with different this object");
@@ -67,10 +67,13 @@ public class ModuleMain extends XposedModule {
                 return null;
             });
 
-            hook(exampleConstructor).setPriority(PRIORITY_HIGHEST).intercept(chain -> {
-                log(Log.INFO, TAG, "thrown exception will be propagated to upper interceptors or the caller");
-                throw new RuntimeException("constructor hook exception");
-            });
+            hook(exampleConstructor)
+                    .setPriority(PRIORITY_HIGHEST)
+                    .setExceptionMode(ExceptionMode.PASSTHROUGH)
+                    .intercept(chain -> {
+                        log(Log.INFO, TAG, "thrown exception will be propagated to upper interceptors or the caller");
+                        throw new RuntimeException("constructor hook exception");
+                    });
 
             // call the original method
             getInvoker(exampleMethod).setType(Invoker.Type.ORIGIN).invoke(new Object());
