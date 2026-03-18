@@ -41,8 +41,8 @@ class MainActivity : Activity() {
         binding.binder.text = "Loading"
         XposedServiceHelper.registerListener(object : XposedServiceHelper.OnServiceListener {
             override fun onServiceBind(service: XposedService) {
-                mService = service
                 handler.post {
+                    mService = service
                     binding.binder.text = "Binder acquired"
                     binding.api.text = "API " + service.apiVersion
                     binding.framework.text = "Framework " + service.frameworkName
@@ -50,22 +50,22 @@ class MainActivity : Activity() {
                     binding.frameworkVersionCode.text = "Framework version code " + service.frameworkVersionCode
                     binding.frameworkProperties.text = "Framework properties: " + service.frameworkProperties.toHexString()
                     binding.scope.text = "Scope: " + service.scope
-                }
 
-                binding.requestScope.setOnClickListener {
-                    service.requestScope(listOf("com.android.settings"), mCallback)
-                }
-                binding.randomPrefs.setOnClickListener {
-                    val prefs = service.getRemotePreferences("test")
-                    val old = prefs.getInt("test", -1)
-                    val new = Random.nextInt()
-                    Toast.makeText(this@MainActivity, "$old -> $new", Toast.LENGTH_SHORT).show()
-                    prefs.edit().putInt("test", new).apply()
-                }
-                binding.remoteFile.setOnClickListener {
-                    service.openRemoteFile("test.txt").use { pfd ->
-                        FileWriter(pfd.fileDescriptor).use {
-                            it.append("Hello World!")
+                    binding.requestScope.setOnClickListener {
+                        service.requestScope(listOf("com.android.settings"), mCallback)
+                    }
+                    binding.randomPrefs.setOnClickListener {
+                        val prefs = service.getRemotePreferences("test")
+                        val old = prefs.getInt("test", -1)
+                        val new = Random.nextInt()
+                        Toast.makeText(this@MainActivity, "$old -> $new", Toast.LENGTH_SHORT).show()
+                        prefs.edit().putInt("test", new).apply()
+                    }
+                    binding.remoteFile.setOnClickListener {
+                        service.openRemoteFile("test.txt").use { pfd ->
+                            FileWriter(pfd.fileDescriptor).use {
+                                it.append("Hello World!")
+                            }
                         }
                     }
                 }
