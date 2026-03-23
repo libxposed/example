@@ -12,7 +12,9 @@ import io.github.libxposed.service.XposedService.OnScopeEventListener
 import java.io.FileWriter
 import kotlin.random.Random
 
+@SuppressLint("SetTextI18n")
 class MainActivity : Activity(), App.ServiceStateListener {
+    private var mService: XposedService? = null
     private var binding: ActivityMainBinding? = null
 
     private val mCallback = object : OnScopeEventListener {
@@ -23,6 +25,7 @@ class MainActivity : Activity(), App.ServiceStateListener {
                     "onScopeRequestApproved: $approved",
                     Toast.LENGTH_SHORT
                 ).show()
+                binding?.scope?.text = "Scope: " + mService?.scope
             }
         }
 
@@ -33,11 +36,11 @@ class MainActivity : Activity(), App.ServiceStateListener {
                     "onScopeRequestFailed: $message",
                     Toast.LENGTH_SHORT
                 ).show()
+                binding?.scope?.text = "Scope: " + mService?.scope
             }
         }
     }
 
-    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -57,8 +60,8 @@ class MainActivity : Activity(), App.ServiceStateListener {
         super.onStop()
     }
 
-    @SuppressLint("SetTextI18n")
     override fun onServiceStateChanged(service: XposedService?) {
+        mService = service
         val handler = Handler(Looper.getMainLooper())
         binding?.let {
             handler.post {
