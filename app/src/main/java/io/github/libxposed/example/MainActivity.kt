@@ -61,46 +61,47 @@ class MainActivity : Activity(), App.ServiceStateListener {
     override fun onServiceStateChanged(service: XposedService?) {
         mService = service
         runOnUiThread {
-            binding.binder.text = "Binder acquired"
-            binding.api.text = "API " + service?.apiVersion
-            binding.framework.text = "Framework " + service?.frameworkName
-            binding.frameworkVersion.text = "Framework version " + service?.frameworkVersion
-            binding.frameworkVersionCode.text =
-                "Framework version code " + service?.frameworkVersionCode
-            val cap = service?.frameworkProperties
-            val capStringList = mutableListOf<String>()
-            if (cap != null && cap.and(XposedService.PROP_CAP_SYSTEM) != 0L) {
-                capStringList.add("PROP_CAP_SYSTEM")
-            }
-            if (cap != null && cap.and(XposedService.PROP_CAP_REMOTE) != 0L) {
-                capStringList.add("PROP_CAP_REMOTE")
-            }
-            if (cap != null && cap.and(XposedService.PROP_RT_API_PROTECTION) != 0L) {
-                capStringList.add("PROP_RT_API_PROTECTION")
-            }
-            binding.frameworkProperties.text =
-                "Framework properties: $capStringList"
-            binding.scope.text = "Scope: " + service?.scope
-
-            binding.requestScope.setOnClickListener {
-                service?.requestScope(listOf("com.android.settings"), mCallback)
-            }
-            binding.randomPrefs.setOnClickListener {
-                val prefs = service?.getRemotePreferences("test")
-                val old = prefs?.getInt("test", -1)
-                val new = Random.nextInt()
-                Toast.makeText(this@MainActivity, "$old -> $new", Toast.LENGTH_SHORT).show()
-                prefs?.edit()?.putInt("test", new)?.apply()
-            }
-            binding.remoteFile.setOnClickListener {
-                service?.openRemoteFile("test.txt").use {
-                    FileWriter(it?.fileDescriptor).use { writer ->
-                        writer.append("Hello World!")
-                    }
-                }
-            }
             if (service == null) {
                 binding.binder.text = "Binder is null"
+            } else {
+                binding.binder.text = "Binder acquired"
+                binding.api.text = "API " + service.apiVersion
+                binding.framework.text = "Framework " + service.frameworkName
+                binding.frameworkVersion.text = "Framework version " + service.frameworkVersion
+                binding.frameworkVersionCode.text =
+                    "Framework version code " + service.frameworkVersionCode
+                val cap = service.frameworkProperties
+                val capStringList = mutableListOf<String>()
+                if (cap.and(XposedService.PROP_CAP_SYSTEM) != 0L) {
+                    capStringList.add("PROP_CAP_SYSTEM")
+                }
+                if (cap.and(XposedService.PROP_CAP_REMOTE) != 0L) {
+                    capStringList.add("PROP_CAP_REMOTE")
+                }
+                if (cap.and(XposedService.PROP_RT_API_PROTECTION) != 0L) {
+                    capStringList.add("PROP_RT_API_PROTECTION")
+                }
+                binding.frameworkProperties.text =
+                    "Framework properties: $capStringList"
+                binding.scope.text = "Scope: " + service.scope
+
+                binding.requestScope.setOnClickListener {
+                    service.requestScope(listOf("com.android.settings"), mCallback)
+                }
+                binding.randomPrefs.setOnClickListener {
+                    val prefs = service.getRemotePreferences("test")
+                    val old = prefs.getInt("test", -1)
+                    val new = Random.nextInt()
+                    Toast.makeText(this@MainActivity, "$old -> $new", Toast.LENGTH_SHORT).show()
+                    prefs.edit()?.putInt("test", new)?.apply()
+                }
+                binding.remoteFile.setOnClickListener {
+                    service.openRemoteFile("test.txt").use { pfd ->
+                        FileWriter(pfd.fileDescriptor).use {
+                            it.append("Hello World!")
+                        }
+                    }
+                }
             }
         }
     }
