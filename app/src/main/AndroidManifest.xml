@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
+        android:name=".App"
         android:description="@android:string/unknownName"
         android:label="Xposed Example"
         android:theme="@android:style/Theme.DeviceDefault"

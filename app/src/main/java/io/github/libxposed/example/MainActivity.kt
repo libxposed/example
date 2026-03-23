@@ -5,29 +5,34 @@ import android.app.Activity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.widget.Toast
 import io.github.libxposed.example.databinding.ActivityMainBinding
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedService.OnScopeEventListener
-import io.github.libxposed.service.XposedServiceHelper
 import java.io.FileWriter
 import kotlin.random.Random
 
-class MainActivity : Activity() {
-
-    private var mService: XposedService? = null
+class MainActivity : Activity(), App.ServiceStateListener {
+    private var binding: ActivityMainBinding? = null
 
     private val mCallback = object : OnScopeEventListener {
         override fun onScopeRequestApproved(approved: List<String>) {
             runOnUiThread {
-                Toast.makeText(this@MainActivity, "onScopeRequestApproved: $approved", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@MainActivity,
+                    "onScopeRequestApproved: $approved",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
 
         override fun onScopeRequestFailed(message: String) {
             runOnUiThread {
-                Toast.makeText(this@MainActivity, "onScopeRequestFailed: $message", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this@MainActivity,
+                    "onScopeRequestFailed: $message",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -35,51 +40,72 @@ class MainActivity : Activity() {
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        val handler = Handler(Looper.getMainLooper())
-        binding.binder.text = "Loading"
-        XposedServiceHelper.registerListener(object : XposedServiceHelper.OnServiceListener {
-            override fun onServiceBind(service: XposedService) {
-                handler.post {
-                    mService = service
-                    binding.binder.text = "Binder acquired"
-                    binding.api.text = "API " + service.apiVersion
-                    binding.framework.text = "Framework " + service.frameworkName
-                    binding.frameworkVersion.text = "Framework version " + service.frameworkVersion
-                    binding.frameworkVersionCode.text = "Framework version code " + service.frameworkVersionCode
-                    binding.frameworkProperties.text = "Framework properties: " + service.frameworkProperties.toHexString()
-                    binding.scope.text = "Scope: " + service.scope
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        binding?.let {
+            setContentView(it.root)
+            it.binder.text = "Loading"
+        }
+    }
 
-                    binding.requestScope.setOnClickListener {
-                        service.requestScope(listOf("com.android.settings"), mCallback)
-                    }
-                    binding.randomPrefs.setOnClickListener {
-                        val prefs = service.getRemotePreferences("test")
-                        val old = prefs.getInt("test", -1)
-                        val new = Random.nextInt()
-                        Toast.makeText(this@MainActivity, "$old -> $new", Toast.LENGTH_SHORT).show()
-                        prefs.edit().putInt("test", new).apply()
-                    }
-                    binding.remoteFile.setOnClickListener {
-                        service.openRemoteFile("test.txt").use { pfd ->
-                            FileWriter(pfd.fileDescriptor).use {
-                                it.append("Hello World!")
+    override fun onStart() {
+        super.onStart()
+        App.addServiceStateListener(this, true)
+    }
+
+    override fun onStop() {
+        App.removeServiceStateListener(this)
+        super.onStop()
+    }
+
+    @SuppressLint("SetTextI18n")
+    override fun onServiceStateChanged(service: XposedService?) {
+        val handler = Handler(Looper.getMainLooper())
+        binding?.let {
+            handler.post {
+                it.binder.text = "Binder acquired"
+                it.api.text = "API " + service?.apiVersion
+                it.framework.text = "Framework " + service?.frameworkName
+                it.frameworkVersion.text = "Framework version " + service?.frameworkVersion
+                it.frameworkVersionCode.text =
+                    "Framework version code " + service?.frameworkVersionCode
+                val cap = service?.frameworkProperties
+                val capStringList = mutableListOf<String>()
+                cap?.and(XposedService.PROP_CAP_SYSTEM)?.let {
+                    capStringList.add("PROP_CAP_SYSTEM")
+                }
+                cap?.and(XposedService.PROP_CAP_REMOTE)?.let {
+                    capStringList.add("PROP_CAP_REMOTE")
+                }
+                cap?.and(XposedService.PROP_RT_API_PROTECTION)?.let {
+                    capStringList.add("PROP_RT_API_PROTECTION")
+                }
+                it.frameworkProperties.text =
+                    "Framework properties: $capStringList"
+                it.scope.text = "Scope: " + service?.scope
+
+                it.requestScope.setOnClickListener {
+                    service?.requestScope(listOf("com.android.settings"), mCallback)
+                }
+                it.randomPrefs.setOnClickListener {
+                    val prefs = service?.getRemotePreferences("test")
+                    val old = prefs?.getInt("test", -1)
+                    val new = Random.nextInt()
+                    Toast.makeText(this@MainActivity, "$old -> $new", Toast.LENGTH_SHORT).show()
+                    prefs?.edit()?.putInt("test", new)?.apply()
+                }
+                it.remoteFile.setOnClickListener {
+                    service?.openRemoteFile("test.txt").use { pfd ->
+                        pfd?.let { fileDescriptor ->
+                            FileWriter(fileDescriptor.fileDescriptor).use { writer ->
+                                writer.append("Hello World!")
                             }
                         }
                     }
                 }
+                if (service == null) {
+                    it.let { binding -> binding.binder.text = "Binder is null" }
+                }
             }
-
-            override fun onServiceDied(service: XposedService) {
-            }
-        })
-
-
-        handler.postDelayed({
-            if (mService == null) {
-                binding.binder.text = "Binder is null"
-            }
-        }, 5000)
+        }
     }
 }
