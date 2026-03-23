@@ -3,8 +3,6 @@ package io.github.libxposed.example
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.widget.Toast
 import io.github.libxposed.example.databinding.ActivityMainBinding
 import io.github.libxposed.service.XposedService
@@ -15,7 +13,7 @@ import kotlin.random.Random
 @SuppressLint("SetTextI18n")
 class MainActivity : Activity(), App.ServiceStateListener {
     private var mService: XposedService? = null
-    private var binding: ActivityMainBinding? = null
+    private lateinit var binding: ActivityMainBinding
 
     private val mCallback = object : OnScopeEventListener {
         override fun onScopeRequestApproved(approved: List<String>) {
@@ -25,7 +23,7 @@ class MainActivity : Activity(), App.ServiceStateListener {
                     "onScopeRequestApproved: $approved",
                     Toast.LENGTH_SHORT
                 ).show()
-                binding?.scope?.text = "Scope: " + mService?.scope
+                binding.scope.text = "Scope: " + mService?.scope
             }
         }
 
@@ -36,7 +34,7 @@ class MainActivity : Activity(), App.ServiceStateListener {
                     "onScopeRequestFailed: $message",
                     Toast.LENGTH_SHORT
                 ).show()
-                binding?.scope?.text = "Scope: " + mService?.scope
+                binding.scope.text = "Scope: " + mService?.scope
             }
         }
     }
@@ -44,7 +42,7 @@ class MainActivity : Activity(), App.ServiceStateListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
-        binding?.let {
+        binding.let {
             setContentView(it.root)
             it.binder.text = "Loading"
         }
@@ -62,52 +60,47 @@ class MainActivity : Activity(), App.ServiceStateListener {
 
     override fun onServiceStateChanged(service: XposedService?) {
         mService = service
-        val handler = Handler(Looper.getMainLooper())
-        binding?.let {
-            handler.post {
-                it.binder.text = "Binder acquired"
-                it.api.text = "API " + service?.apiVersion
-                it.framework.text = "Framework " + service?.frameworkName
-                it.frameworkVersion.text = "Framework version " + service?.frameworkVersion
-                it.frameworkVersionCode.text =
-                    "Framework version code " + service?.frameworkVersionCode
-                val cap = service?.frameworkProperties
-                val capStringList = mutableListOf<String>()
-                if (cap != null && cap.and(XposedService.PROP_CAP_SYSTEM) != 0L) {
-                    capStringList.add("PROP_CAP_SYSTEM")
-                }
-                if (cap != null && cap.and(XposedService.PROP_CAP_REMOTE) != 0L) {
-                    capStringList.add("PROP_CAP_REMOTE")
-                }
-                if (cap != null && cap.and(XposedService.PROP_RT_API_PROTECTION) != 0L) {
-                    capStringList.add("PROP_RT_API_PROTECTION")
-                }
-                it.frameworkProperties.text =
-                    "Framework properties: $capStringList"
-                it.scope.text = "Scope: " + service?.scope
+        runOnUiThread {
+            binding.binder.text = "Binder acquired"
+            binding.api.text = "API " + service?.apiVersion
+            binding.framework.text = "Framework " + service?.frameworkName
+            binding.frameworkVersion.text = "Framework version " + service?.frameworkVersion
+            binding.frameworkVersionCode.text =
+                "Framework version code " + service?.frameworkVersionCode
+            val cap = service?.frameworkProperties
+            val capStringList = mutableListOf<String>()
+            if (cap != null && cap.and(XposedService.PROP_CAP_SYSTEM) != 0L) {
+                capStringList.add("PROP_CAP_SYSTEM")
+            }
+            if (cap != null && cap.and(XposedService.PROP_CAP_REMOTE) != 0L) {
+                capStringList.add("PROP_CAP_REMOTE")
+            }
+            if (cap != null && cap.and(XposedService.PROP_RT_API_PROTECTION) != 0L) {
+                capStringList.add("PROP_RT_API_PROTECTION")
+            }
+            binding.frameworkProperties.text =
+                "Framework properties: $capStringList"
+            binding.scope.text = "Scope: " + service?.scope
 
-                it.requestScope.setOnClickListener {
-                    service?.requestScope(listOf("com.android.settings"), mCallback)
-                }
-                it.randomPrefs.setOnClickListener {
-                    val prefs = service?.getRemotePreferences("test")
-                    val old = prefs?.getInt("test", -1)
-                    val new = Random.nextInt()
-                    Toast.makeText(this@MainActivity, "$old -> $new", Toast.LENGTH_SHORT).show()
-                    prefs?.edit()?.putInt("test", new)?.apply()
-                }
-                it.remoteFile.setOnClickListener {
-                    service?.openRemoteFile("test.txt").use { pfd ->
-                        pfd?.let { fileDescriptor ->
-                            FileWriter(fileDescriptor.fileDescriptor).use { writer ->
-                                writer.append("Hello World!")
-                            }
-                        }
+            binding.requestScope.setOnClickListener {
+                service?.requestScope(listOf("com.android.settings"), mCallback)
+            }
+            binding.randomPrefs.setOnClickListener {
+                val prefs = service?.getRemotePreferences("test")
+                val old = prefs?.getInt("test", -1)
+                val new = Random.nextInt()
+                Toast.makeText(this@MainActivity, "$old -> $new", Toast.LENGTH_SHORT).show()
+                prefs?.edit()?.putInt("test", new)?.apply()
+            }
+            binding.remoteFile.setOnClickListener {
+                service?.openRemoteFile("test.txt").use {
+                    FileWriter(it?.fileDescriptor).use { writer ->
+                        writer.append("Hello World!")
                     }
                 }
-                if (service == null) {
-                    it.let { binding -> binding.binder.text = "Binder is null" }
-                }
+            }
+            if (service == null) {
+                binding.binder.text = "Binder is null"
             }
         }
     }

@@ -12,6 +12,7 @@ class App : Application(), XposedServiceHelper.OnServiceListener {
     companion object {
         @Volatile
         var mService: XposedService? = null
+            private set
         private val serviceStateListeners =
             CopyOnWriteArraySet<ServiceStateListener>()
 
