@@ -1,8 +1,6 @@
 package io.github.libxposed.example
 
 import android.app.Application
-import android.os.Handler
-import android.os.Looper
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
 import java.util.concurrent.CopyOnWriteArraySet
@@ -14,21 +12,15 @@ class App : Application(), XposedServiceHelper.OnServiceListener {
     companion object {
         @Volatile
         var mService: XposedService? = null
-        val serviceStateListeners =
+        private val serviceStateListeners =
             CopyOnWriteArraySet<ServiceStateListener>()
-        val mainHandler: Handler = Handler(Looper.getMainLooper())
+
         private fun dispatchServiceState(
             listener: ServiceStateListener,
             service: XposedService?
         ) {
-            if (Looper.myLooper() == Looper.getMainLooper()) {
+            if (serviceStateListeners.contains(listener)) {
                 listener.onServiceStateChanged(service)
-                return
-            }
-            mainHandler.post {
-                listener.onServiceStateChanged(
-                    service
-                )
             }
         }
 
@@ -38,10 +30,7 @@ class App : Application(), XposedServiceHelper.OnServiceListener {
         ) {
             serviceStateListeners.add(listener)
             if (notifyImmediately) {
-                dispatchServiceState(
-                    listener,
-                    mService
-                )
+                dispatchServiceState(listener, mService)
             }
         }
 

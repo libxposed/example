@@ -73,13 +73,13 @@ class MainActivity : Activity(), App.ServiceStateListener {
                     "Framework version code " + service?.frameworkVersionCode
                 val cap = service?.frameworkProperties
                 val capStringList = mutableListOf<String>()
-                cap?.and(XposedService.PROP_CAP_SYSTEM)?.let {
+                if (cap != null && cap.and(XposedService.PROP_CAP_SYSTEM) != 0L) {
                     capStringList.add("PROP_CAP_SYSTEM")
                 }
-                cap?.and(XposedService.PROP_CAP_REMOTE)?.let {
+                if (cap != null && cap.and(XposedService.PROP_CAP_REMOTE) != 0L) {
                     capStringList.add("PROP_CAP_REMOTE")
                 }
-                cap?.and(XposedService.PROP_RT_API_PROTECTION)?.let {
+                if (cap != null && cap.and(XposedService.PROP_RT_API_PROTECTION) != 0L) {
                     capStringList.add("PROP_RT_API_PROTECTION")
                 }
                 it.frameworkProperties.text =
