@@ -6,6 +6,7 @@ import androidx.annotation.RequiresApi
 import io.github.libxposed.api.XposedInterface.ExceptionMode
 import io.github.libxposed.api.XposedInterface.Invoker
 import io.github.libxposed.api.XposedModule
+import io.github.libxposed.api.XposedModuleInterface
 import io.github.libxposed.api.XposedModuleInterface.ModuleLoadedParam
 import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
 import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam
@@ -26,6 +27,18 @@ class ModuleMainKt : XposedModule() {
         log(Log.INFO, TAG, "system supported: " + hasProp(PROP_CAP_SYSTEM))
         log(Log.INFO, TAG, "remote supported: " + hasProp(PROP_CAP_REMOTE))
         log(Log.INFO, TAG, "api protection: " + hasProp(PROP_RT_API_PROTECTION))
+    }
+
+    override fun onHotReloading(param: XposedModuleInterface.HotReloadingParam): Boolean {
+        log(Log.INFO, TAG, "onHotReloading")
+        param.setSavedInstanceState("Hello from last generation")
+        return true
+    }
+
+    override fun onHotReloaded(param: XposedModuleInterface.HotReloadedParam) {
+        log(Log.INFO, TAG, "onHotReloaded: ${param.processName}, ${param.oldHookHandles.size} old hooks")
+        log(Log.INFO, TAG, "savedInstanceState: " + param.savedInstanceState)
+        param.oldHookHandles.forEach { it.unhook() }
     }
 
     @RequiresApi(Build.VERSION_CODES.Q)
@@ -81,7 +94,7 @@ class ModuleMainKt : XposedModule() {
             result += chain.proceedWith(newThis, newArgs) as String
 
             log(Log.INFO, TAG, "call the raw method")
-            result += getInvoker(exampleMethod).setType(Invoker.Type.ORIGIN).invoke(chain.getThisObject()) as String
+            result += getInvoker(exampleMethod).setType(Invoker.Type.ORIGIN).invoke(chain.thisObject) as String
 
             log(Log.INFO, TAG, "returned value will pass to higher priority chains")
             result

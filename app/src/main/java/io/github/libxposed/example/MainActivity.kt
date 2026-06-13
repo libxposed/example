@@ -85,6 +85,25 @@ class MainActivity : Activity(), App.ServiceStateListener {
                     "Framework properties: $capStringList"
                 binding.scope.text = "Scope: " + service.scope
 
+                if (service.apiVersion >= 102) {
+                    val targets = service.runningTargets
+                    binding.process.text = "Processes: " + targets.map { it.processName }
+                    binding.reload.isEnabled = true
+                    binding.reload.setOnClickListener {
+                        for (target in targets) {
+                            service.hotReloadModule(target, null) { p, r ->
+                                runOnUiThread {
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        "Reload ${p.processName}, $r",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            }
+                        }
+                    }
+                }
+
                 binding.requestScope.setOnClickListener {
                     service.requestScope(listOf("com.android.settings"), mCallback)
                 }

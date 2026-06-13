@@ -34,6 +34,20 @@ public class ModuleMain extends XposedModule {
     }
 
     @Override
+    public boolean onHotReloading(@NonNull HotReloadingParam param) {
+        log(Log.INFO, TAG, "onHotReloading");
+        param.setSavedInstanceState("Hello from last generation");
+        return true;
+    }
+
+    @Override
+    public void onHotReloaded(@NonNull HotReloadedParam param) {
+        log(Log.INFO, TAG, "onHotReloaded: " + param.getProcessName() + ", " + param.getOldHookHandles().size() + " old hooks");
+        log(Log.INFO, TAG, "savedInstanceState: " + param.getSavedInstanceState());
+        param.getOldHookHandles().forEach(HookHandle::unhook);
+    }
+
+    @Override
     public void onPackageReady(@NonNull PackageReadyParam param) {
         try {
             var exampleClass = Class.forName("io.github.libxposed.example.Example", true, param.getClassLoader());

@@ -62,6 +62,14 @@
         android:textAppearance="?android:textAppearanceLarge"
         tools:text="Scope" />
 
+    <TextView
+        android:id="@+id/process"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textAppearance="?android:textAppearanceLarge"
+        tools:text="Process: Not available" />
+
     <Button
         android:id="@+id/request_scope"
         android:layout_width="wrap_content"
@@ -81,5 +89,13 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Remote File"
+        tools:ignore="HardcodedText" />
+
+    <Button
+        android:id="@+id/reload"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:enabled="false"
+        android:text="Hot Reload"
         tools:ignore="HardcodedText" />
 </LinearLayout>
